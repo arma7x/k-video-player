@@ -1,0 +1,57 @@
+<div class="kui-flex-wrap">
+  <style>
+    .kui-header {
+      height:0px;
+      margin-bottom: 0px;
+    }
+    .kui-router-m-top {
+      margin-top: 0!important;
+    }
+    #__kai_router__{
+      height:264px!important;
+    }
+    .kai-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background-color: #000000;
+    }
+    /* KaiOS landscape devices (320x240) */
+    @media screen and (orientation: landscape) {
+      .kai-container {
+        height: 80%;
+      }
+    }
+    #vplayer_progress {
+      height: 4px;
+      position: fixed;
+      top: 0;
+      z-index:8;
+      background-color: red;
+    }
+    #vplayer_indicator {
+      padding: 0 2px;
+      width: calc(100% - 4px);
+      position: fixed;
+      top: 5px;
+      z-index:8;
+      color: red;
+      font-weight: bold;
+      font-size: 70%;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  </style>
+  <canvas style="position:fixed;top:0;z-index:-9999;"></canvas>
+  <div id="vplayer_progress"></div>
+  <div id="vplayer_indicator">
+    <div><span id="current-duration">00:00</span>/<span id="total-duration">00:00</span></div>
+    <div>Playback Speed <span id="playback-speed"></span>x</div>
+  </div>
+  <div class="kai-container">
+    <video id="vplayer"></video>
+  </div>
+</div>
