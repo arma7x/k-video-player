@@ -119,8 +119,8 @@ window.addEventListener("load", function() {
                 track.src = subtitle;
                 track.setAttribute('default', true);
                 track.addEventListener("load", function() {
-                  this.mode = "showing";
-                  vplayer.textTracks[0].mode = "showing";
+                  this.mode = "hidden";
+                  vplayer.textTracks[0].mode = "hidden";
                 });
                 vplayer.appendChild(track);
               }
@@ -132,6 +132,19 @@ window.addEventListener("load", function() {
               document.getElementById('total-duration').innerHTML = convertTime(e.target.duration);
               RESUME_LOGS[id] = e.target.currentTime
               localforage.setItem('RESUME_LOGS', RESUME_LOGS);
+              const caption = document.getElementById('vplayer_caption_text');
+              if (vplayer.textTracks[0]) {
+                if (vplayer.textTracks[0].activeCues[0]) {
+                  caption.innerHTML = vplayer.textTracks[0].activeCues[0].text;
+                  caption.style.visibility = 'visible';
+                } else {
+                  caption.innerHTML = '';
+                  caption.style.visibility = 'hidden';
+                }
+              } else {
+                caption.innerHTML = '';
+                caption.style.visibility = 'hidden';
+              }
             }
             vplayer.onended = (e) => {
               delete RESUME_LOGS[id];
