@@ -130,7 +130,13 @@ window.addEventListener("load", function() {
   });
 
   const player = function($router, id, name, video, subtitle = null) {
+    var INIT = false;
     var VOLUME = 0;
+    var LFT_DBL_CLICK_TH = 0;
+    var LFT_DBL_CLICK_TIMER = undefined;
+    var RGT_DBL_CLICK_TH = 0;
+    var RGT_DBL_CLICK_TIMER = undefined;
+
     $router.push(
       new Kai({
         name: 'player',
@@ -202,8 +208,9 @@ window.addEventListener("load", function() {
             }
             vplayer.onratechange = (e) => {
               const rate = Math.round((vplayer.playbackRate + Number.EPSILON) * 100) / 100;
-              $router.showToast(`Playback Rate ${rate}x`);
               document.getElementById('playback-speed').innerHTML = rate;
+              if (INIT)
+                $router.showToast(`Playback Rate ${rate}x`);
             }
             vplayer.pause();
             vplayer.setAttribute('src', video);
@@ -211,6 +218,9 @@ window.addEventListener("load", function() {
             if (RESUME_AT == null) {
               vplayer.play();
               this.$router.setSoftKeyCenterText('PAUSE');
+              setTimeout(() => {
+                INIT = true;
+              }, 200);
             } else {
               this.$router.showDialog('Resume', 'Resume at last playback ?', null, 'Yes', () => {
                 vplayer.currentTime = RESUME_AT;
@@ -219,6 +229,9 @@ window.addEventListener("load", function() {
               }, 'CANCEL', () => {}, () => {
                 vplayer.play();
                 this.$router.setSoftKeyCenterText('PAUSE');
+                setTimeout(() => {
+                  INIT = true;
+                }, 200);
               });
             }
             window['vplayer'] = vplayer;
@@ -348,7 +361,19 @@ window.addEventListener("load", function() {
             }
           },
           arrowRight: function() {
-            window['vplayer'].currentTime += 10;
+            var threshold = new Date().getTime() - RGT_DBL_CLICK_TH;
+            if (threshold > 0 && threshold <= 300) {
+              clearTimeout(RGT_DBL_CLICK_TIMER);
+              RGT_DBL_CLICK_TH = 0;
+              window['vplayer'].currentTime += 30;
+            } else {
+              RGT_DBL_CLICK_TH = new Date().getTime();
+              RGT_DBL_CLICK_TIMER = setTimeout(() => {
+                if (RGT_DBL_CLICK_TH !== 0) {
+                  window['vplayer'].currentTime += 10;
+                }
+              }, 500);
+            }
           },
           arrowDown: function() {
             if (navigator.volumeManager && navigator.mozAudioChannelManager) {
@@ -360,7 +385,20 @@ window.addEventListener("load", function() {
             }
           },
           arrowLeft: function() {
-            window['vplayer'].currentTime -= 10;
+            var threshold = new Date().getTime() - LFT_DBL_CLICK_TH;
+            if (threshold > 0 && threshold <= 300) {
+              clearTimeout(LFT_DBL_CLICK_TIMER);
+              LFT_DBL_CLICK_TH = 0;
+              window['vplayer'].currentTime -= 30;
+            } else {
+              LFT_DBL_CLICK_TH = new Date().getTime();
+              LFT_DBL_CLICK_TIMER = setTimeout(() => {
+                if (LFT_DBL_CLICK_TH !== 0) {
+                  window['vplayer'].currentTime -= 10;
+                  LFT_DBL_CLICK_TH = 0;
+                }
+              }, 500);
+            }
           },
         },
         backKeyListener: function() {
