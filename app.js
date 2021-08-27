@@ -454,6 +454,16 @@ window.addEventListener("load", function() {
                 this.$router.showToast('Please `Kill App` if you think the app was hang');
               }, 30000);
             } else {
+              videos.forEach((video) => {
+                if (video.id == null) {
+                  const hashids2 = new Hashids(video.path, 15);
+                  const _vid = hashids2.encode(1);
+                  video.id = _vid;
+                }
+                if (video.src == null) {
+                  video.src = '/icons/icon.png';
+                }
+              });
               this.setData({videos: videos});
             }
           });
@@ -483,11 +493,82 @@ window.addEventListener("load", function() {
         fileRegistry.forEach((file) => {
           var n = file.split('/');
           var n1 = n[n.length - 1];
-          videos.push({'name': n1, 'path': file});
+          const hashids2 = new Hashids(file.path, 15);
+          const _vid = hashids2.encode(1);
+          videos.push({'name': n1, 'path': file, id: _vid});
         });
         videos.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-        this.setData({videos: videos});
-        localforage.setItem('VIDEOS', videos);
+        const _total = Object.keys(videos).length;
+        if (_total === 0) {
+          this.setData({videos: []});
+          localforage.setItem('VIDEOS', []);
+          return
+        }
+        var _done = 0;
+        videos.forEach((video, idx) => {
+          window['__DS__'].getFile(video.path, (blob) => {
+            const player = document.createElement('video');
+            player.preload = 'metadata';
+            if (player.canPlayType(blob.type)) {
+              player.setAttribute('src', URL.createObjectURL(blob));
+              player.load();
+              player.onloadedmetadata = () => {
+                try {
+                  if (player.videoWidth > 0 && player.videoHeight > 0) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = player.videoWidth / (player.videoHeight / 50);
+                    canvas.height = 50;
+                    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(player, 0, 0, canvas.width, canvas.height);
+                    video.src = canvas.toDataURL('image/jpeg');
+                    _done += 1;
+                    if (_total === _done) {
+                      this.setData({videos: videos});
+                      localforage.setItem('VIDEOS', videos);
+                    }
+                  } else {
+                    video.src = '/icons/icon.png';
+                    _done += 1;
+                    if (_total === _done) {
+                      this.setData({videos: videos});
+                      localforage.setItem('VIDEOS', videos);
+                    }
+                  }
+                } catch (err) {
+                  video.src = '/icons/icon.png';
+                  _done += 1;
+                  if (_total === _done) {
+                    this.setData({videos: videos});
+                    localforage.setItem('VIDEOS', videos);
+                  }
+                }
+              }
+              player.onerror = (err) => {
+                video.src = '/icons/icon.png';
+                _done += 1;
+                if (_total === _done) {
+                  this.setData({videos: videos});
+                  localforage.setItem('VIDEOS', videos);
+                }
+              }
+            } else {
+              video.src = '/icons/icon.png';
+              _done += 1;
+              if (_total === _done) {
+                this.setData({videos: videos});
+                localforage.setItem('VIDEOS', videos);
+              }
+            }
+          }, () => {
+            _done += 1;
+            if (_total === _done) {
+              console.log('/icons/icon.png');
+              this.setData({videos: videos});
+              localforage.setItem('VIDEOS', videos);
+            }
+          });
+        });
       },
       search: function(keyword) {
         this.verticalNavIndex = -1;
@@ -507,7 +588,7 @@ window.addEventListener("load", function() {
         });
       }
     },
-    softKeyText: { left: 'Menu', center: 'SELECT', right: 'Kill App' },
+    softKeyText: { left: 'Menu', center: 'PLAY', right: 'Kill App' },
     softKeyListener: {
       left: function() {
         var menu = [
