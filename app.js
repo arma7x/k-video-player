@@ -1,3 +1,5 @@
+const APP_VERSION = '1.1.0';
+
 function convertTime(time) {
   if (isNaN(time)) {
     return '00:00';
@@ -59,6 +61,30 @@ function convertSrtCue(caption) {
   return cue;
 }
 
+function extractFilter(DOM) {
+  let s = window.getComputedStyle(DOM);
+  let theFilter = s.getPropertyValue("filter");
+  let filters = ["blur","brightness","contrast","drop-shadow","grayscale","hue-rotate","invert","opacity","saturate","sepia","url"];
+  let ry = [];
+  filters.forEach((f,i)=>{
+    let oF = theFilter.match(f);
+    if(oF){
+      ry.push({prop:oF[0],index:oF.index})
+    }
+  })
+  function compareNumbers(a, b) {
+    return a.index - b.index;
+  }
+  let sortedry = ry.sort(compareNumbers);
+  let oFilters = {}
+  for(let i = 0; i < sortedry.length; i++){
+    let sbstr = (i+1 < sortedry.length) ? theFilter.substring(sortedry[i].index,sortedry[i+1].index).trim() : theFilter.substring(sortedry[i].index).trim()
+    let value = sbstr.substring(sbstr.indexOf("(")+1, sbstr.length-1);
+    oFilters[sortedry[i].prop] = value;
+  }
+  return oFilters;
+}
+
 window.addEventListener("load", function() {
 
   localforage.setDriver(localforage.LOCALSTORAGE);
@@ -73,7 +99,25 @@ window.addEventListener("load", function() {
     templateUrl: document.location.origin + '/templates/helpnsupport.html',
     mounted: function() {
       this.$router.setHeaderTitle('Help & Support');
-      navigator.spatialNavigationEnabled = false;
+    },
+    unmounted: function() {},
+    methods: {},
+    softKeyText: { left: '', center: '', right: '' },
+    softKeyListener: {
+      left: function() {},
+      center: function() {},
+      right: function() {}
+    }
+  });
+
+  const changelogs = new Kai({
+    name: 'changelogs',
+    data: {
+      title: 'changelogs'
+    },
+    templateUrl: document.location.origin + '/templates/changelogs.html',
+    mounted: function() {
+      this.$router.setHeaderTitle('Changelogs');
     },
     unmounted: function() {},
     methods: {},
@@ -132,18 +176,20 @@ window.addEventListener("load", function() {
               document.getElementById('total-duration').innerHTML = convertTime(e.target.duration);
               RESUME_LOGS[id] = e.target.currentTime
               localforage.setItem('RESUME_LOGS', RESUME_LOGS);
-              const caption = document.getElementById('vplayer_caption_text');
-              if (vplayer.textTracks[0]) {
-                if (vplayer.textTracks[0].activeCues[0]) {
-                  caption.innerHTML = vplayer.textTracks[0].activeCues[0].text;
-                  caption.style.visibility = 'visible';
+              if (subtitle != null) {
+                const caption = document.getElementById('vplayer_caption_text');
+                if (vplayer.textTracks[0]) {
+                  if (vplayer.textTracks[0].activeCues[0]) {
+                    caption.innerHTML = vplayer.textTracks[0].activeCues[0].text;
+                    caption.style.visibility = 'visible';
+                  } else {
+                    caption.innerHTML = '';
+                    caption.style.visibility = 'hidden';
+                  }
                 } else {
                   caption.innerHTML = '';
                   caption.style.visibility = 'hidden';
                 }
-              } else {
-                caption.innerHTML = '';
-                caption.style.visibility = 'hidden';
               }
             }
             vplayer.onended = (e) => {
@@ -207,9 +253,45 @@ window.addEventListener("load", function() {
               if (window['vplayer'].playbackRate <= 2)
                 window['vplayer'].playbackRate += 0.1;
             } else if (evt.key === '4') {
-              window['vplayer'].currentTime -= 30;
+              const container = document.getElementById('vplayer_caption');
+              container.style.bottom = `${parseInt(container.style.bottom) - 1}%`;
+              $router.showToast(`Subtitle height ${container.style.bottom}`);
             } else if (evt.key === '6') {
-              window['vplayer'].currentTime += 30;
+              const container = document.getElementById('vplayer_caption');
+              container.style.bottom = `${parseInt(container.style.bottom) + 1}%`;
+              $router.showToast(`Subtitle height ${container.style.bottom}`);
+            } else if (evt.key === '7') {
+              const container = document.getElementById('vplayer_caption');
+              container.style.fontSize = `${parseInt(container.style.fontSize) - 1}%`;
+              $router.showToast(`Font size ${container.style.fontSize}`);
+            } else if (evt.key === '9') {
+              const container = document.getElementById('vplayer_caption');
+              container.style.fontSize = `${parseInt(container.style.fontSize) + 1}%`;
+              $router.showToast(`Font size ${container.style.fontSize}`);
+            } else if (evt.key === '*') {
+              const container = document.getElementById('player_screen');
+              const filters = extractFilter(container);
+              const contrast = parseInt(filters['contrast']) - 1;
+              container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
+              $router.showToast(`Contrast ${contrast}%`);
+            } else if (evt.key === '#') {
+              const container = document.getElementById('player_screen');
+              const filters = extractFilter(container);
+              const contrast = parseInt(filters['contrast']) + 1;
+              container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
+              $router.showToast(`Contrast ${contrast}%`);
+            } else if (evt.key === '8') {
+              const container = document.getElementById('player_screen');
+              const filters = extractFilter(container);
+              const brightness = parseInt(filters['brightness']) - 1;
+              container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
+              $router.showToast(`Brightness ${brightness}%`);
+            } else if (evt.key === '0') {
+              const container = document.getElementById('player_screen');
+              const filters = extractFilter(container);
+              const brightness = parseInt(filters['brightness']) + 1;
+              container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
+              $router.showToast(`Brightness ${brightness}%`);
             }
           }
         },
@@ -308,17 +390,25 @@ window.addEventListener("load", function() {
     verticalNavClass: '.homeNav',
     templateUrl: document.location.origin + '/templates/home.html',
     mounted: function() {
-      navigator.spatialNavigationEnabled = false;
       this.$router.setHeaderTitle('K-Video Player');
-      localforage.getItem('VIDEOS')
-      .then((videos) => {
-        if (!videos) {
-          window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
-          setTimeout(() => {
-            this.$router.showToast('Please `Kill App` if you think the app was hang');
-          }, 30000);
+      localforage.getItem('APP_VERSION')
+      .then((v) => {
+        if (v == null || v != APP_VERSION) {
+          localforage.setItem('APP_VERSION', APP_VERSION)
+          this.$router.showToast(`Updated to version ${APP_VERSION}`);
+          this.$router.push('changelogs');
         } else {
-          this.setData({videos: videos});
+          localforage.getItem('VIDEOS')
+          .then((videos) => {
+            if (!videos) {
+              window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
+              setTimeout(() => {
+                this.$router.showToast('Please `Kill App` if you think the app was hang');
+              }, 30000);
+            } else {
+              this.setData({videos: videos});
+            }
+          });
         }
       });
     },
@@ -375,6 +465,7 @@ window.addEventListener("load", function() {
         var menu = [
           {'text': 'Search'},
           {'text': 'Reload Library'},
+          {'text': 'Changelogs'},
           {'text': 'Help & Support'},
         ]
         this.$router.showOptionMenu('Menu', menu, 'SELECT', (selected) => {
@@ -382,6 +473,8 @@ window.addEventListener("load", function() {
             window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
           } else if (selected.text === 'Help & Support') {
             this.$router.push('helpSupportPage');
+          } else if (selected.text === 'Changelogs') {
+            this.$router.push('changelogs');
           } else if (selected.text === 'Search') {
             const searchDialog = Kai.createDialog('Search', '<div><input id="search-input" placeholder="Enter your keyword" class="kui-input" type="text" /></div>', null, '', undefined, '', undefined, '', undefined, undefined, this.$router);
             searchDialog.mounted = () => {
@@ -515,6 +608,10 @@ window.addEventListener("load", function() {
       'helpSupportPage': {
         name: 'helpSupportPage',
         component: helpSupportPage
+      },
+      'changelogs': {
+        name: 'changelogs',
+        component: changelogs
       },
     }
   });
