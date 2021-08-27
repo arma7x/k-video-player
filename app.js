@@ -136,6 +136,7 @@ window.addEventListener("load", function() {
     var LFT_DBL_CLICK_TIMER = undefined;
     var RGT_DBL_CLICK_TH = 0;
     var RGT_DBL_CLICK_TIMER = undefined;
+    var CURRENT_CUE = null;
 
     $router.push(
       new Kai({
@@ -186,15 +187,24 @@ window.addEventListener("load", function() {
                 const caption = document.getElementById('vplayer_caption_text');
                 if (vplayer.textTracks[0]) {
                   if (vplayer.textTracks[0].activeCues[0]) {
-                    caption.innerHTML = vplayer.textTracks[0].activeCues[0].text;
-                    caption.style.visibility = 'visible';
+                    if (CURRENT_CUE != vplayer.textTracks[0].activeCues[0].text) {
+                      CURRENT_CUE = vplayer.textTracks[0].activeCues[0].text;
+                      caption.innerHTML = CURRENT_CUE;
+                      caption.style.visibility = 'visible';
+                    }
                   } else {
+                    if (CURRENT_CUE != null) {
+                      CURRENT_CUE = null;
+                      caption.innerHTML = '';
+                      caption.style.visibility = 'hidden';
+                    }
+                  }
+                } else {
+                  if (CURRENT_CUE != null) {
+                    CURRENT_CUE = null;
                     caption.innerHTML = '';
                     caption.style.visibility = 'hidden';
                   }
-                } else {
-                  caption.innerHTML = '';
-                  caption.style.visibility = 'hidden';
                 }
               }
             }
