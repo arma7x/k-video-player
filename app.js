@@ -89,6 +89,7 @@ window.addEventListener("load", function() {
 
   localforage.setDriver(localforage.LOCALSTORAGE);
 
+  const THUMBS = {};
   const state = new KaiState({});
 
   const helpSupportPage = new Kai({
@@ -465,6 +466,7 @@ window.addEventListener("load", function() {
                 }
               });
               this.setData({videos: videos});
+              this.methods.renderThumb();
             }
           });
         }
@@ -493,81 +495,63 @@ window.addEventListener("load", function() {
         fileRegistry.forEach((file) => {
           var n = file.split('/');
           var n1 = n[n.length - 1];
-          const hashids2 = new Hashids(file.path, 15);
-          const _vid = hashids2.encode(1);
-          videos.push({'name': n1, 'path': file, id: _vid});
+          const hashids2 = new Hashids(file, 15);
+          const _vid = hashids2.encode(1);;
+          videos.push({'name': n1, 'path': file, id: _vid, src: '/icons/icon.png'});
         });
         videos.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-        const _total = Object.keys(videos).length;
-        if (_total === 0) {
-          this.setData({videos: []});
-          localforage.setItem('VIDEOS', []);
-          return
+        this.setData({videos: videos});
+        localforage.setItem('VIDEOS', videos);
+        this.methods.renderThumb();
+      },
+      renderThumb: function () {
+        var DS;
+        if (window['__DS__']) {
+          DS = window['__DS__'];
         }
-        var _done = 0;
-        videos.forEach((video, idx) => {
-          window['__DS__'].getFile(video.path, (blob) => {
-            const player = document.createElement('video');
-            player.preload = 'metadata';
-            if (player.canPlayType(blob.type)) {
-              player.setAttribute('src', URL.createObjectURL(blob));
-              player.load();
-              player.onloadedmetadata = () => {
-                try {
-                  if (player.videoWidth > 0 && player.videoHeight > 0) {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = player.videoWidth / (player.videoHeight / 50);
-                    canvas.height = 50;
-                    var ctx = canvas.getContext('2d', { willReadFrequently: true });
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(player, 0, 0, canvas.width, canvas.height);
-                    video.src = canvas.toDataURL('image/jpeg');
-                    _done += 1;
-                    if (_total === _done) {
-                      this.setData({videos: videos});
-                      localforage.setItem('VIDEOS', videos);
-                    }
+        else {
+          DS = new DataStorage();
+        }
+        this.data.videos.forEach((video) => {
+          if (THUMBS[video.id]) {
+            const img = document.getElementById(video.id);
+            if (img) {
+              img.src = THUMBS[video.id];
+            }
+          } else {
+            DS.getFile(video.path, (videoBlob) => {
+              const offscreenVideo = document.createElement('video');
+              if (offscreenVideo.canPlayType(videoBlob.type)) {
+                offscreenVideo.src = URL.createObjectURL(videoBlob);
+                offscreenVideo.onloadedmetadata = () => {
+                  if (offscreenVideo.videoWidth > 0 && offscreenVideo.videoHeight > 0) {
+                    offscreenVideo.fastSeek(1);
+                    setTimeout(() => {
+                      var canvas = document.createElement('canvas');
+                      canvas.width = offscreenVideo.videoWidth / (offscreenVideo.videoHeight / 50);
+                      canvas.height = 50;
+                      var ctx = canvas.getContext('2d',{ willReadFrequently: true });
+                      ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
+                      const img = document.getElementById(video.id);
+                      if (img) {
+                        const src = canvas.toDataURL('image/png')
+                        img.src = src;
+                        THUMBS[video.id] = src;
+                        URL.revokeObjectURL(offscreenVideo.src);
+                        offscreenVideo.removeAttribute('src');
+                        offscreenVideo.load();
+                      }
+                    }, 1000);
                   } else {
-                    video.src = '/icons/icon.png';
-                    _done += 1;
-                    if (_total === _done) {
-                      this.setData({videos: videos});
-                      localforage.setItem('VIDEOS', videos);
-                    }
-                  }
-                } catch (err) {
-                  video.src = '/icons/icon.png';
-                  _done += 1;
-                  if (_total === _done) {
-                    this.setData({videos: videos});
-                    localforage.setItem('VIDEOS', videos);
+                    THUMBS[video.id] = '/icons/icon.png';
                   }
                 }
+                offscreenVideo.load();
+              } else {
+                THUMBS[video.id] = '/icons/icon.png';
               }
-              player.onerror = (err) => {
-                video.src = '/icons/icon.png';
-                _done += 1;
-                if (_total === _done) {
-                  this.setData({videos: videos});
-                  localforage.setItem('VIDEOS', videos);
-                }
-              }
-            } else {
-              video.src = '/icons/icon.png';
-              _done += 1;
-              if (_total === _done) {
-                this.setData({videos: videos});
-                localforage.setItem('VIDEOS', videos);
-              }
-            }
-          }, () => {
-            _done += 1;
-            if (_total === _done) {
-              console.log('/icons/icon.png');
-              this.setData({videos: videos});
-              localforage.setItem('VIDEOS', videos);
-            }
-          });
+            });
+          }
         });
       },
       search: function(keyword) {
@@ -585,6 +569,7 @@ window.addEventListener("load", function() {
           });
           result.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
           this.setData({videos: result});
+          this.methods.renderThumb();
         });
       }
     },
