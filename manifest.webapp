@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
   "name": "K-Video Player",
-  "description": "K-Video Player a full-featured video player. It supports VTT/SRT, auto-resume last video playback, control playback rate, take screenshot & fullscreen",
+  "description": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last video playback, control playback rate, take screenshot & fullscreen",
   "launch_path": "/index.html",
   "theme": "#873eff",
   "theme_color": "#873eff",
@@ -31,7 +31,7 @@
   "locales": {
     "en-US": {
       "name": "K-Video Player",
-      "subtitle": "K-Video Player a full-featured video player. It supports VTT/SRT, auto-resume last video playback, control playback rate, take screenshot & fullscreen"
+      "subtitle": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last video playback, control playback rate, take screenshot & fullscreen"
     }
   },
   "default_locale": "en-US"
