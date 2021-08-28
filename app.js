@@ -540,7 +540,7 @@ window.addEventListener("load", function() {
             DS = window['__DS__'];
           }
           else {
-            DS = new DataStorage();
+            DS = new DataStorage(() => {}, () => {}, false);
           }
           this.data.videos.forEach((video) => {
             localforage.getItem('THUMBS')
@@ -727,7 +727,7 @@ window.addEventListener("load", function() {
             DS = window['__DS__'];
           }
           else {
-            DS = new DataStorage();
+            DS = new DataStorage(() => {}, () => {}, false);
           }
           var vtt_path;
           var srt_path;
