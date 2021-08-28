@@ -304,29 +304,29 @@ window.addEventListener("load", function() {
               container.style.fontSize = `${parseInt(container.style.fontSize) + 1}%`;
               $router.showToast(`Font size ${container.style.fontSize}`);
             } else if (evt.key === '*') {
-              const container = document.getElementById('player_screen');
-              const filters = extractFilter(container);
-              const contrast = parseInt(filters['contrast']) - 1;
-              container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
-              $router.showToast(`Contrast ${contrast}%`);
+              //const container = document.getElementById('player_screen');
+              //const filters = extractFilter(container);
+              //const contrast = parseInt(filters['contrast']) - 1;
+              //container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
+              //$router.showToast(`Contrast ${contrast}%`);
             } else if (evt.key === '#') {
-              const container = document.getElementById('player_screen');
-              const filters = extractFilter(container);
-              const contrast = parseInt(filters['contrast']) + 1;
-              container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
-              $router.showToast(`Contrast ${contrast}%`);
+              //const container = document.getElementById('player_screen');
+              //const filters = extractFilter(container);
+              //const contrast = parseInt(filters['contrast']) + 1;
+              //container.style.filter = `contrast(${contrast}%) brightness(${filters['brightness']})`;
+              //$router.showToast(`Contrast ${contrast}%`);
             } else if (evt.key === '8') {
-              const container = document.getElementById('player_screen');
-              const filters = extractFilter(container);
-              const brightness = parseInt(filters['brightness']) - 1;
-              container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
-              $router.showToast(`Brightness ${brightness}%`);
+              //const container = document.getElementById('player_screen');
+              //const filters = extractFilter(container);
+              //const brightness = parseInt(filters['brightness']) - 1;
+              //container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
+              //$router.showToast(`Brightness ${brightness}%`);
             } else if (evt.key === '0') {
-              const container = document.getElementById('player_screen');
-              const filters = extractFilter(container);
-              const brightness = parseInt(filters['brightness']) + 1;
-              container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
-              $router.showToast(`Brightness ${brightness}%`);
+              //const container = document.getElementById('player_screen');
+              //const filters = extractFilter(container);
+              //const brightness = parseInt(filters['brightness']) + 1;
+              //container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
+              //$router.showToast(`Brightness ${brightness}%`);
             } else if (evt.key === '5') {
               if (subtitle == null) {
                 $router.showToast(`Subtitle not available`);
@@ -823,6 +823,7 @@ window.addEventListener("load", function() {
   }
 
   function displayKaiAds() {
+    return
     var display = true;
     if (window['kaiadstimer'] == null) {
       window['kaiadstimer'] = new Date();
