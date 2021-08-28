@@ -131,6 +131,7 @@ window.addEventListener("load", function() {
   });
 
   const player = function($router, id, name, video, subtitle = null) {
+    var SUBTITLE_AVAILABLE = subtitle != null;
     var INIT = false;
     var VOLUME = 0;
     var LFT_DBL_CLICK_TH = 0;
@@ -150,6 +151,10 @@ window.addEventListener("load", function() {
         },
         templateUrl: document.location.origin + '/templates/player.html',
         mounted: function() {
+          if (SUBTITLE_AVAILABLE) {
+            const container = document.getElementById('vplayer_caption');
+            container.style.visibility = 'visible';
+          }
           localforage.getItem('RESUME_LOGS')
           .then((RESUME_LOGS) => {
             if (RESUME_LOGS == null) {
@@ -188,7 +193,7 @@ window.addEventListener("load", function() {
                 const caption = document.getElementById('vplayer_caption_text');
                 if (vplayer.textTracks[0]) {
                   if (vplayer.textTracks[0].activeCues[0]) {
-                    if (CURRENT_CUE != vplayer.textTracks[0].activeCues[0].text) {
+                    if (CURRENT_CUE != vplayer.textTracks[0].activeCues[0].text && SUBTITLE_AVAILABLE) {
                       CURRENT_CUE = vplayer.textTracks[0].activeCues[0].text;
                       caption.innerHTML = CURRENT_CUE;
                       caption.style.visibility = 'visible';
@@ -208,6 +213,12 @@ window.addEventListener("load", function() {
                   }
                 }
               }
+            }
+            vplayer.onplay = (e) => {
+              this.$router.setSoftKeyCenterText('PAUSE');
+            }
+            vplayer.onpause = (e) => {
+              this.$router.setSoftKeyCenterText('RESUME');
             }
             vplayer.onended = (e) => {
               delete RESUME_LOGS[id];
@@ -316,10 +327,24 @@ window.addEventListener("load", function() {
               const brightness = parseInt(filters['brightness']) + 1;
               container.style.filter = `contrast(${filters['contrast']}) brightness(${brightness}%)`;
               $router.showToast(`Brightness ${brightness}%`);
+            } else if (evt.key === '5') {
+              if (subtitle == null) {
+                $router.showToast(`Subtitle not available`);
+                return
+              }
+              const caption = document.getElementById('vplayer_caption_text');
+              SUBTITLE_AVAILABLE = !SUBTITLE_AVAILABLE;
+              if (SUBTITLE_AVAILABLE) {
+                caption.style.visibility = 'visible';
+                $router.showToast(`Subtitle visible`);
+              } else {
+                caption.style.visibility = 'hidden';
+                $router.showToast(`Subtitle hidden`);
+              }
             }
           }
         },
-        softKeyText: { left: 'Fullscreen', center: '', right: 'Mute' },
+        softKeyText: { left: 'Fullscreen', center: 'PLAY', right: 'Mute' },
         softKeyListener: {
           left: function() {
             if (!document.fullscreenElement) {
@@ -344,10 +369,8 @@ window.addEventListener("load", function() {
           center: function() {
             if (window['vplayer'].duration > 0 && !window['vplayer'].paused) {
               window['vplayer'].pause();
-              $router.setSoftKeyCenterText('PLAY');
             } else {
               window['vplayer'].play();
-              $router.setSoftKeyCenterText('PAUSE');
             }
           },
           right: function() {
