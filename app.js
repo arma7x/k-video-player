@@ -89,7 +89,7 @@ window.addEventListener("load", function() {
 
   localforage.setDriver(localforage.LOCALSTORAGE);
 
-  const THUMBS = {};
+  // const THUMBS = {};
   const state = new KaiState({});
 
   const helpSupportPage = new Kai({
@@ -463,6 +463,7 @@ window.addEventListener("load", function() {
     templateUrl: document.location.origin + '/templates/home.html',
     mounted: function() {
       this.$router.setHeaderTitle('K-Video Player');
+      this.$router.setSoftKeyCenterText('PLAY');
       localforage.getItem('APP_VERSION')
       .then((v) => {
         if (v == null || v != APP_VERSION) {
@@ -519,7 +520,7 @@ window.addEventListener("load", function() {
           var n = file.split('/');
           var n1 = n[n.length - 1];
           const hashids2 = new Hashids(file, 15);
-          const _vid = hashids2.encode(1);;
+          const _vid = hashids2.encode(1);
           videos.push({'name': n1, 'path': file, id: _vid, src: '/icons/icon.png'});
         });
         videos.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
@@ -528,54 +529,100 @@ window.addEventListener("load", function() {
         this.methods.renderThumb();
       },
       renderThumb: function () {
-        var DS;
-        if (window['__DS__']) {
-          DS = window['__DS__'];
-        }
-        else {
-          DS = new DataStorage();
-        }
-        this.data.videos.forEach((video) => {
-          if (THUMBS[video.id]) {
-            const img = document.getElementById(video.id);
-            if (img) {
-              img.src = THUMBS[video.id];
-            }
-          } else {
-            DS.getFile(video.path, (videoBlob) => {
-              const offscreenVideo = document.createElement('video');
-              if (offscreenVideo.canPlayType(videoBlob.type)) {
-                offscreenVideo.src = URL.createObjectURL(videoBlob);
-                offscreenVideo.onloadedmetadata = () => {
-                  if (offscreenVideo.videoWidth > 0 && offscreenVideo.videoHeight > 0) {
-                    offscreenVideo.fastSeek(1);
-                    setTimeout(() => {
-                      var canvas = document.createElement('canvas');
-                      canvas.width = offscreenVideo.videoWidth / (offscreenVideo.videoHeight / 50);
-                      canvas.height = 50;
-                      var ctx = canvas.getContext('2d',{ willReadFrequently: true });
-                      ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
-                      const img = document.getElementById(video.id);
-                      if (img) {
-                        const src = canvas.toDataURL('image/png')
-                        img.src = src;
-                        THUMBS[video.id] = src;
-                        URL.revokeObjectURL(offscreenVideo.src);
-                        offscreenVideo.removeAttribute('src');
-                        offscreenVideo.load();
-                      }
-                    }, 1000);
-                  } else {
-                    THUMBS[video.id] = '/icons/icon.png';
+        setTimeout(() => {
+          const TOTAL = this.data.videos.length;
+          if (TOTAL === 0)
+            return;
+          this.$router.showLoading();
+          var ELAPSED = 0;
+          var DS;
+          if (window['__DS__']) {
+            DS = window['__DS__'];
+          }
+          else {
+            DS = new DataStorage();
+          }
+          this.data.videos.forEach((video) => {
+            localforage.getItem('THUMBS')
+            .then((THUMBS) => {
+              if (THUMBS == null) {
+                THUMBS = {};
+              }
+              if (THUMBS[video.id]) {
+                const img = document.getElementById(video.id);
+                if (img) {
+                  img.src = THUMBS[video.id];
+                  ELAPSED += 1;
+                  if (ELAPSED === TOTAL) {
+                    this.$router.hideLoading();
                   }
                 }
-                offscreenVideo.load();
               } else {
-                THUMBS[video.id] = '/icons/icon.png';
+                DS.getFile(video.path, (videoBlob) => {
+                  const offscreenVideo = document.createElement('video');
+                  if (offscreenVideo.canPlayType(videoBlob.type)) {
+                    offscreenVideo.src = URL.createObjectURL(videoBlob);
+                    offscreenVideo.onloadedmetadata = () => {
+                      if (offscreenVideo.videoWidth > 0 && offscreenVideo.videoHeight > 0) {
+                        offscreenVideo.fastSeek(1);
+                        setTimeout(() => {
+                          var canvas = document.createElement('canvas');
+                          canvas.width = offscreenVideo.videoWidth / (offscreenVideo.videoHeight / 50);
+                          canvas.height = 50;
+                          var ctx = canvas.getContext('2d',{ willReadFrequently: true });
+                          ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
+                          const img = document.getElementById(video.id);
+                          if (img) {
+                            const src = canvas.toDataURL('image/png')
+                            img.src = src;
+                            THUMBS[video.id] = src;
+                            localforage.setItem('THUMBS', THUMBS);
+                            URL.revokeObjectURL(offscreenVideo.src);
+                            offscreenVideo.removeAttribute('src');
+                            offscreenVideo.load();
+                          }
+                          ELAPSED += 1;
+                          if (ELAPSED === TOTAL) {
+                            this.$router.hideLoading();
+                          }
+                        }, 1000);
+                      } else {
+                        THUMBS[video.id] = '/icons/icon.png';
+                        ELAPSED += 1;
+                        if (ELAPSED === TOTAL) {
+                          this.$router.hideLoading();
+                        }
+                      }
+                    }
+                    offscreenVideo.onerror = () => {
+                      THUMBS[video.id] = '/icons/icon.png';
+                      ELAPSED += 1;
+                      if (ELAPSED === TOTAL) {
+                        this.$router.hideLoading();
+                      }
+                    }
+                    offscreenVideo.load();
+                  } else {
+                    THUMBS[video.id] = '/icons/icon.png';
+                    ELAPSED += 1;
+                    if (ELAPSED === TOTAL) {
+                      this.$router.hideLoading();
+                    }
+                  }
+                }, () => {
+                  THUMBS[video.id] = '/icons/icon.png';
+                  ELAPSED += 1;
+                  if (ELAPSED === TOTAL) {
+                    this.$router.hideLoading();
+                  }
+                });
               }
-            });
-          }
-        });
+            })
+            .catch(() => {
+              this.$router.hideLoading();
+            })
+          });
+        }, 100);
       },
       search: function(keyword) {
         this.verticalNavIndex = -1;
@@ -607,6 +654,7 @@ window.addEventListener("load", function() {
         ]
         this.$router.showOptionMenu('Menu', menu, 'SELECT', (selected) => {
           if (selected.text === 'Reload Library') {
+            this.verticalNavIndex = -1;
             window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
           } else if (selected.text === 'Help & Support') {
             this.$router.push('helpSupportPage');
