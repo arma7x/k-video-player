@@ -582,6 +582,7 @@ window.addEventListener("load", function() {
                             offscreenVideo.load();
                           }
                           ELAPSED += 1;
+                          this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                           if (ELAPSED === TOTAL) {
                             this.$router.hideLoading();
                           }
@@ -589,6 +590,7 @@ window.addEventListener("load", function() {
                       } else {
                         THUMBS[video.id] = '/icons/icon.png';
                         ELAPSED += 1;
+                        this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                         if (ELAPSED === TOTAL) {
                           this.$router.hideLoading();
                         }
@@ -597,6 +599,7 @@ window.addEventListener("load", function() {
                     offscreenVideo.onerror = () => {
                       THUMBS[video.id] = '/icons/icon.png';
                       ELAPSED += 1;
+                      this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                       if (ELAPSED === TOTAL) {
                         this.$router.hideLoading();
                       }
@@ -605,6 +608,7 @@ window.addEventListener("load", function() {
                   } else {
                     THUMBS[video.id] = '/icons/icon.png';
                     ELAPSED += 1;
+                    this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                     if (ELAPSED === TOTAL) {
                       this.$router.hideLoading();
                     }
@@ -612,6 +616,7 @@ window.addEventListener("load", function() {
                 }, () => {
                   THUMBS[video.id] = '/icons/icon.png';
                   ELAPSED += 1;
+                  this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                   if (ELAPSED === TOTAL) {
                     this.$router.hideLoading();
                   }
