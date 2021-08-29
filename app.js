@@ -529,6 +529,7 @@ window.addEventListener("load", function() {
         this.methods.renderThumb();
       },
       renderThumb: function () {
+        var _THUMBS = {};
         setTimeout(() => {
           const TOTAL = this.data.videos.length;
           if (TOTAL === 0)
@@ -548,10 +549,11 @@ window.addEventListener("load", function() {
               if (THUMBS == null) {
                 THUMBS = {};
               }
-              if (THUMBS[video.id]) {
+              _THUMBS = THUMBS;
+              if (_THUMBS[video.id]) {
                 const img = document.getElementById(video.id);
                 if (img) {
-                  img.src = THUMBS[video.id];
+                  img.src = _THUMBS[video.id];
                   ELAPSED += 1;
                   if (ELAPSED === TOTAL) {
                     this.$router.hideLoading();
@@ -572,11 +574,11 @@ window.addEventListener("load", function() {
                           var ctx = canvas.getContext('2d',{ willReadFrequently: true });
                           ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
                           const img = document.getElementById(video.id);
+                          _THUMBS[video.id] = '/icons/icon.png';
                           if (img) {
-                            const src = canvas.toDataURL('image/png')
+                            const src = canvas.toDataURL('image/jpeg')
                             img.src = src;
-                            THUMBS[video.id] = src;
-                            localforage.setItem('THUMBS', THUMBS);
+                            _THUMBS[video.id] = src;
                             URL.revokeObjectURL(offscreenVideo.src);
                             offscreenVideo.removeAttribute('src');
                             offscreenVideo.load();
@@ -584,41 +586,56 @@ window.addEventListener("load", function() {
                           ELAPSED += 1;
                           this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                           if (ELAPSED === TOTAL) {
-                            this.$router.hideLoading();
+                            localforage.setItem('THUMBS', _THUMBS)
+                            .finally(() => {
+                              this.$router.hideLoading();
+                            });
                           }
                         }, 1000);
                       } else {
-                        THUMBS[video.id] = '/icons/icon.png';
+                        _THUMBS[video.id] = '/icons/icon.png';
                         ELAPSED += 1;
                         this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                         if (ELAPSED === TOTAL) {
-                          this.$router.hideLoading();
+                          localforage.setItem('THUMBS', _THUMBS)
+                          .finally(() => {
+                            this.$router.hideLoading();
+                          });
                         }
                       }
                     }
                     offscreenVideo.onerror = () => {
-                      THUMBS[video.id] = '/icons/icon.png';
+                      _THUMBS[video.id] = '/icons/icon.png';
                       ELAPSED += 1;
                       this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                       if (ELAPSED === TOTAL) {
-                        this.$router.hideLoading();
+                        localforage.setItem('THUMBS', _THUMBS)
+                        .finally(() => {
+                          this.$router.hideLoading();
+                        });
                       }
                     }
                     offscreenVideo.load();
                   } else {
-                    THUMBS[video.id] = '/icons/icon.png';
+                    _THUMBS[video.id] = '/icons/icon.png';
                     ELAPSED += 1;
                     this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                     if (ELAPSED === TOTAL) {
-                      this.$router.hideLoading();
+                      localforage.setItem('THUMBS', _THUMBS)
+                      .finally(() => {
+                        this.$router.hideLoading();
+                      });
                     }
                   }
                 }, () => {
-                  THUMBS[video.id] = '/icons/icon.png';
+                  _THUMBS[video.id] = '/icons/icon.png';
                   ELAPSED += 1;
                   this.$router.showToast(`${ELAPSED}/${TOTAL}`);
                   if (ELAPSED === TOTAL) {
-                    this.$router.hideLoading();
+                    localforage.setItem('THUMBS', _THUMBS)
+                    .finally(() => {
+                      this.$router.hideLoading();
+                    });
                   }
                 });
               }
@@ -823,7 +840,6 @@ window.addEventListener("load", function() {
   }
 
   function displayKaiAds() {
-    return
     var display = true;
     if (window['kaiadstimer'] == null) {
       window['kaiadstimer'] = new Date();
