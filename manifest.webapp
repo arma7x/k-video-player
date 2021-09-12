@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "K-Video Player",
-  "description": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & fullscreen",
+  "description": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & more",
   "launch_path": "/index.html",
   "theme": "#873eff",
   "theme_color": "#873eff",
@@ -17,7 +17,7 @@
   },
   "developer": {
     "name": "arma7x",
-    "url": "https://github.com/arma7x"
+    "url": "https://www.kaiostech.com"
   },
   "origin": "app://kvideoplayer.arma7x.com",
   "type": "privileged",
@@ -31,7 +31,8 @@
   "locales": {
     "en-US": {
       "name": "K-Video Player",
-      "subtitle": "K-Video Player is a full-featured video player. Supports VTT/SRT subtitle, auto-resume last playback duration, control playback rate, screenshot, fullscreen mode, adjustable subtitle height, subtitle font size, brightness and contrast"
+      "subtitle": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & more",
+      "description": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & more"
     }
   },
   "default_locale": "en-US"

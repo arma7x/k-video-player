@@ -176,12 +176,12 @@ const DataStorage = (function() {
     });
   }
 
-  DataStorage.prototype.deleteFile = function(path, name) {
+  DataStorage.prototype.deleteFile = function(path, name, scan = false) {
     var _this = this;
     return new Promise((success, fail) => {
       path.push(name)
       var dir = JSON.parse(JSON.stringify(_this.documentTree));
-      var valid = false;
+      var valid = scan;
       for (var i in path) {
         if (typeof dir[path[i]] === 'string') {
           valid = true;
