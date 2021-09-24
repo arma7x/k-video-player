@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "name": "K-Video Player",
   "description": "K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & more",
   "launch_path": "/index.html",
