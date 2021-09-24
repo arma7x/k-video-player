@@ -1,4 +1,4 @@
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 
 function convertTime(time) {
   if (isNaN(time)) {
@@ -87,10 +87,48 @@ function extractFilter(DOM) {
 
 window.addEventListener("load", function() {
 
+  function startVolumeManager() {
+    const session = new lib_session.Session();
+    const sessionstate = {};
+    navigator.volumeManager = null;
+    sessionstate.onsessionconnected = function () {
+      // console.log(`AudioVolumeManager onsessionconnected`);
+      lib_audiovolume.AudioVolumeManager.get(session).
+      then((AudioVolumeManagerService) => {
+        // console.log(`Got AudioVolumeManager : #AudioVolumeManagerService.service_id}`);
+        navigator.volumeManager = AudioVolumeManagerService;
+      }).catch((e) => {
+        // console.log(`Error calling AudioVolumeManager service${JSON.stringify(e)}`);
+        navigator.volumeManager = null;
+      });
+    };
+    sessionstate.onsessiondisconnected = function () {
+      startVolumeManager();
+    };
+    session.open('websocket', 'localhost:8081', 'secrettoken', sessionstate, true);
+  }
+
+  (() => {
+    if (navigator.b2g) {
+      const head = document.getElementsByTagName('head')[0];
+      const scripts = ["http://127.0.0.1:8081/api/v1/shared/core.js", "http://127.0.0.1:8081/api/v1/shared/session.js", "http://127.0.0.1:8081/api/v1/audiovolumemanager/service.js"];
+      scripts.forEach((path) => {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = path;
+        head.appendChild(script);
+      });
+      setTimeout(startVolumeManager, 1000);
+    }
+  })();
+
   localforage.setDriver(localforage.LOCALSTORAGE);
 
   // const THUMBS = {};
-  const state = new KaiState({});
+  const state = new KaiState({
+    'fileRegistry': [],
+    'documentTree': {}
+  });
 
   const helpSupportPage = new Kai({
     name: 'helpSupportPage',
@@ -151,6 +189,13 @@ window.addEventListener("load", function() {
         },
         templateUrl: document.location.origin + '/templates/player.html',
         mounted: function() {
+          if (navigator.b2g) {
+            if (navigator.b2g.audioChannelManager) {
+              navigator.b2g.audioChannelManager.volumeControlChannel = 'content';
+            }
+          } else if (navigator.mozAudioChannelManager) {
+            navigator.mozAudioChannelManager.volumeControlChannel = 'content';
+          }
           if (SUBTITLE_AVAILABLE) {
             const container = document.getElementById('vplayer_caption');
             container.style.visibility = 'visible';
@@ -214,6 +259,9 @@ window.addEventListener("load", function() {
                 }
               }
             }
+            vplayer.onerror = (e) => {
+              $router.showToast('Unknown Error');
+            }
             vplayer.onplay = (e) => {
               this.$router.setSoftKeyCenterText('PAUSE');
             }
@@ -248,7 +296,13 @@ window.addEventListener("load", function() {
                 vplayer.currentTime = RESUME_AT;
               }, 'No', () => {
                 vplayer.currentTime = 0;
-              }, 'CANCEL', () => {}, () => {
+              }, 'CANCEL', () => {
+                setTimeout(() => {
+                  RESUME_LOGS[id] = RESUME_AT;
+                  localforage.setItem('RESUME_LOGS', RESUME_LOGS);
+                }, 500);
+                this.$router.pop();
+              }, () => {
                 vplayer.play();
                 this.$router.setSoftKeyCenterText('PAUSE');
                 setTimeout(() => {
@@ -372,6 +426,7 @@ window.addEventListener("load", function() {
               window['vplayer'].pause();
             } else {
               window['vplayer'].play();
+              window['vplayer'].play();
             }
           },
           right: function() {
@@ -387,7 +442,17 @@ window.addEventListener("load", function() {
         },
         dPadNavListener: {
           arrowUp: function() {
-            if (navigator.volumeManager && navigator.mozAudioChannelManager) {
+            if (navigator.b2g) {
+              if (navigator.b2g.audioChannelManager && navigator.volumeManager) {
+                navigator.volumeManager.requestVolumeUp();
+                navigator.volumeManager.requestVolumeShow();
+              } else {
+                if (window['vplayer'].volume !== 1) {
+                  window['vplayer'].volume += 0.02;
+                }
+              }
+            } else if (navigator.volumeManager && navigator.mozAudioChannelManager) {
+              navigator.volumeManager.requestUp();
               navigator.volumeManager.requestShow();
             } else {
               if (window['vplayer'].volume !== 1) {
@@ -411,7 +476,17 @@ window.addEventListener("load", function() {
             }
           },
           arrowDown: function() {
-            if (navigator.volumeManager && navigator.mozAudioChannelManager) {
+            if (navigator.b2g) {
+              if (navigator.b2g.audioChannelManager && navigator.volumeManager) {
+                navigator.volumeManager.requestVolumeDown();
+                navigator.volumeManager.requestVolumeShow();
+              } else {
+                if (window['vplayer'].volume !== 0) {
+                  window['vplayer'].volume -= 0.02;
+                }
+              }
+            } else if (navigator.volumeManager && navigator.mozAudioChannelManager) {
+              navigator.volumeManager.requestDown();
               navigator.volumeManager.requestShow();
             } else {
               if (window['vplayer'].volume !== 0) {
@@ -845,7 +920,7 @@ window.addEventListener("load", function() {
       'changelogs': {
         name: 'changelogs',
         component: changelogs
-      },
+      }
     }
   });
 
@@ -864,6 +939,23 @@ window.addEventListener("load", function() {
   } catch(e) {
     console.log(e);
   }
+
+  function onChange(fileRegistry, documentTree, groups) {
+    state.setState('fileRegistry', fileRegistry);
+    state.setState('documentTree', documentTree);
+  }
+
+  function onReady(status) {
+    if (app.isMounted) {
+      if (status) {
+        app.$router.hideLoading();
+      } else {
+        app.$router.showLoading();
+      }
+    }
+  }
+
+  const DS = new DataStorage(onChange, onReady);
 
   function displayKaiAds() {
     var display = true;

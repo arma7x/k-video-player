@@ -26,6 +26,12 @@
       "access": "readwrite",
       "description": "Get all files"
     },
+    "audio-channel-normal": {
+      "description" : "Needed to play this app's audio content on the normal channel"
+    },
+    "audio-channel-content": {
+      "description": "To play audio in background"
+    },
     "volumemanager": {}
   },
   "locales": {
