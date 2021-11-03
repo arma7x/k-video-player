@@ -1,18 +1,32 @@
 const APP_VERSION = '1.3.0';
 
 function convertTime(time) {
-  if (isNaN(time)) {
-    return '00:00';
-  }
-  var mins = Math.floor(time / 60);
-  if (mins < 10) {
-    mins = '0' + String(mins);
-  }
-  var secs = Math.floor(time % 60);
-  if (secs < 10) {
-    secs = '0' + String(secs);
-  }
-  return mins + ':' + secs;
+	var hours = "";
+	if (isNaN(time)) {
+		return "00:00";
+	}
+	var mins = Math.floor(time / 60);
+
+	if (mins > 59) {
+		var oras = Math.floor(mins / 60);
+		mins = Math.floor(mins - Number(60 * oras));
+		hours = oras;
+	}
+	if (hours != "") {
+		if (hours < 10) {
+			hours = "0" + String(hours) + ":";
+		} else {
+			hours = hours + ":";
+		}
+	}
+	if (mins < 10) {
+		mins = "0" + String(mins);
+	}
+	var secs = Math.floor(time % 60);
+	if (secs < 10) {
+		secs = "0" + String(secs);
+	}
+	return hours + mins + ":" + secs;
 }
 
 function srt2webvtt(data) {
