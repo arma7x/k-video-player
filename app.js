@@ -1,32 +1,32 @@
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 
 function convertTime(time) {
-	var hours = "";
-	if (isNaN(time)) {
-		return "00:00";
-	}
-	var mins = Math.floor(time / 60);
+  var hours = "";
+  if (isNaN(time)) {
+    return "00:00";
+  }
+  var mins = Math.floor(time / 60);
 
-	if (mins > 59) {
-		var oras = Math.floor(mins / 60);
-		mins = Math.floor(mins - Number(60 * oras));
-		hours = oras;
-	}
-	if (hours != "") {
-		if (hours < 10) {
-			hours = "0" + String(hours) + ":";
-		} else {
-			hours = hours + ":";
-		}
-	}
-	if (mins < 10) {
-		mins = "0" + String(mins);
-	}
-	var secs = Math.floor(time % 60);
-	if (secs < 10) {
-		secs = "0" + String(secs);
-	}
-	return hours + mins + ":" + secs;
+  if (mins > 59) {
+    var oras = Math.floor(mins / 60);
+    mins = Math.floor(mins - Number(60 * oras));
+    hours = oras;
+  }
+  if (hours != "") {
+    if (hours < 10) {
+      hours = "0" + String(hours) + ":";
+    } else {
+      hours = hours + ":";
+    }
+  }
+  if (mins < 10) {
+    mins = "0" + String(mins);
+  }
+  var secs = Math.floor(time % 60);
+  if (secs < 10) {
+    secs = "0" + String(secs);
+  }
+  return hours + mins + ":" + secs;
 }
 
 function srt2webvtt(data) {
@@ -136,7 +136,7 @@ window.addEventListener("load", function() {
     }
   })();
 
-  localforage.setDriver(localforage.LOCALSTORAGE);
+  localforage.setDriver(localforage.INDEXEDDB);
 
   // const THUMBS = {};
   const state = new KaiState({
@@ -428,6 +428,8 @@ window.addEventListener("load", function() {
             } else {
               screen.orientation.unlock();
               document.exitFullscreen();
+              screen.orientation.lock('portrait-primary');
+              screen.orientation.unlock();
               document.getElementById('vplayer').width = this.data.width;
               document.getElementById('vplayer').clientHeight = this.data.height;
               this.$router.setSoftKeyLeftText('Fullscreen');
@@ -529,6 +531,8 @@ window.addEventListener("load", function() {
           if (document.fullscreenElement) {
             screen.orientation.unlock();
             document.exitFullscreen();
+            screen.orientation.lock('portrait-primary');
+            screen.orientation.unlock();
             document.getElementById('vplayer').width = this.data.width;
             document.getElementById('vplayer').clientHeight = this.data.height;
             this.$router.setSoftKeyLeftText('Fullscreen');
