@@ -1,10 +1,5 @@
-# KaiKit
+# K-Video Player
 
-## JS framework for KaiOS
-
-## TODO DOCUMENTATION
-
-## Licence
+> K-Video Player is a full-featured video player. Supports VTT/SRT, auto-resume last playback duration, control playback rate, screenshot & more
 
 [MIT](https://opensource.org/licenses/MIT)
-
